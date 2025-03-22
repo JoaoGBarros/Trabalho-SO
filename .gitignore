@@ -1,0 +1,8 @@
+# Ignorar arquivos compilados
+*.o
+*.out
+*.exe
+
+# Ignorar outros arquivos temporários
+*.log
+*.tmp
