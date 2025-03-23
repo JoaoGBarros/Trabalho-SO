@@ -37,7 +37,7 @@ int caixaLivre = 1; // Indica se a caixa está livre para pagamento
 int totalClientes = 0; // Número total de Clientes que tentarão entrar na barbearia.
 int clientesPendentes = 0; // Clientes que ainda não foram atendidos
 
-int entrarLoja(long id) {
+int EntrarNaLoja(long id) {
     int totalClientesBarbearia = clientesEsperando + clientesSofa + clientesCadeiras;
 
     // Se tiver mais cliente do que a barbearia aguenta, o cliente vai embora
@@ -51,7 +51,7 @@ int entrarLoja(long id) {
     return 1;
 }
 
-void sentarSofa(long id) {
+void SentarNoSofa(long id) {
 
     // Enquanto o sofá estiver cheio, o cliente aguarda
     while (clientesSofa >= maxSofa) {
@@ -62,7 +62,7 @@ void sentarSofa(long id) {
     printf("Cliente %ld: Sentou no sofá.\n", id);
 }
 
-void sentarCadeira(long id) {
+void SentarNaCadeira(long id) {
     
     // Se todas as cadeiras estiverem ocupadas, o cliente aguarda no sofá
     while (clientesCadeiras >= qtdCadeiras) {
@@ -74,7 +74,7 @@ void sentarCadeira(long id) {
     pthread_cond_signal(&clienteChegou);
 }
 
-void pagar(long id) {
+void Pagar(long id) {
     printf("Cliente %ld: Pagando pelo corte.\n", id);
 
     // Se a caixa não estiver livre, o cliente aguarda
@@ -85,7 +85,7 @@ void pagar(long id) {
     pthread_cond_signal(&pagamentoRealizado);
 }
 
-void sairLoja(long id) {
+void SairDaLoja(long id) {
     caixaLivre = 1; // Libera o caixa para o próximo cliente
     printf("Cliente %ld: Pagamento concluído e saiu da barbearia.\n", id);
     clientesCadeiras--; // Libera a cadeira
@@ -99,17 +99,16 @@ void sairLoja(long id) {
     pthread_cond_signal(&barbeiroDisponivel);
 }
 
-void cortarCabelo(long id) {
+void CortarCabelo(long id) {
     printf("Barbeiro %ld: Cortando cabelo.\n", id);
     sleep(2);
 }
 
-void aceitarPagamento(long id) {
-    printf("Barbeiro %ld: Aguardando pagamento do cliente.\n", id);
-    pthread_cond_signal(&clientePagando);
-    while (clientesPendentes > 0) {// Espera pelo pagamento, mas verifica se ainda há clientes pendentes
+void AceitarPagamento(long id) {
+    while (clientesCadeiras > 0) { // Enquanto houver clientes nas cadeiras
+        printf("Barbeiro %ld: Aguardando pagamento do cliente.\n", id);
+        pthread_cond_signal(&clientePagando);
         pthread_cond_wait(&pagamentoRealizado, &mutex);
-        if (clientesPendentes == 0) break;
     }
 }
 
@@ -117,19 +116,19 @@ void* cliente(void* arg) {
     long id = (long)arg;// Identificador do cliente
 
     pthread_mutex_lock(&mutex);
-    if (!entrarLoja(id)) {
+    if (!EntrarNaLoja(id)) {
         pthread_mutex_unlock(&mutex);
         return NULL;
     }
-    sentarSofa(id);
-    sentarCadeira(id);
+    SentarNoSofa(id);
+    SentarNaCadeira(id);
     pthread_mutex_unlock(&mutex);
 
     sleep(2); // Simula tempo de corte
 
     pthread_mutex_lock(&mutex);
-    pagar(id);
-    sairLoja(id);
+    Pagar(id);
+    SairDaLoja(id);
     pthread_mutex_unlock(&mutex);
     return NULL;
 }
@@ -154,10 +153,10 @@ void* barbeiro(void* arg) {
         }
         pthread_mutex_unlock(&mutex);
 
-        cortarCabelo(id);
+        CortarCabelo(id);
 
         pthread_mutex_lock(&mutex);
-        aceitarPagamento(id);
+        AceitarPagamento(id);
         if (clientesPendentes == 0) {// Verificar se o último cliente foi atendido durante o processo de pagamento.
             printf("Barbeiro %ld: Encerrando expediente.\n", id);
             pthread_mutex_unlock(&mutex);
@@ -177,6 +176,7 @@ int main(int argc, char *argv[]) {
 
     totalClientes = atoi(argv[1]);
     clientesPendentes = totalClientes;
+
     if (totalClientes <= 0) {
         fprintf(stderr, "O número de clientes deve ser um inteiro positivo.\n");
         return 1;
