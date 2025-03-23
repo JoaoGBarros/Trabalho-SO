@@ -23,7 +23,6 @@
 #define totalBarbeiros 3 // três barbeiros e
 #define maxSofa 4 // um local de espera que pode acomodar quatro pessoas num sofá.
 #define maxClientes 20 // O número máximo de clientes que pode estar na sala é de 20. 
-#define totalClientes 40 // Número total de Clientes que tentarão entrar na barbearia.
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; // Mutex para controle de acesso às variáveis compartilhadas
 pthread_cond_t clienteChegou = PTHREAD_COND_INITIALIZER;
@@ -34,8 +33,9 @@ pthread_cond_t clientePagando = PTHREAD_COND_INITIALIZER;
 int clientesEsperando = 0; // Clientes esperando para serem atendidos
 int clientesSofa = 0; // Clientes sentados no sofá
 int clientesCadeiras = 0; // Cientes sentados nas cadeiras
-int clientesPendentes = totalClientes; // Clientes que ainda não foram atendidos
 int caixaLivre = 1; // Indica se a caixa está livre para pagamento
+int totalClientes = 0; // Número total de Clientes que tentarão entrar na barbearia.
+int clientesPendentes = 0; // Clientes que ainda não foram atendidos
 
 int entrarLoja(long id) {
     int totalClientesBarbearia = clientesEsperando + clientesSofa + clientesCadeiras;
@@ -168,16 +168,29 @@ void* barbeiro(void* arg) {
     return NULL;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    if (argc != 2) {
+        fprintf(stderr, "É necessário ter o número de clientes, utilize: %s <totalClientes>\n", argv[0]);
+        return 1;
+    }
+
+    totalClientes = atoi(argv[1]);
+    clientesPendentes = totalClientes;
+    if (totalClientes <= 0) {
+        fprintf(stderr, "O número de clientes deve ser um inteiro positivo.\n");
+        return 1;
+    }
+
     pthread_t barbeiros[totalBarbeiros], clientes[totalClientes];
 
     for (long i = 0; i < totalBarbeiros; i++) {
-        pthread_create(&barbeiros[i], NULL, barbeiro, (void*)i);// Cria as threads dos barbeiros
+        pthread_create(&barbeiros[i], NULL, barbeiro, (void*)i); // Cria as threads dos barbeiros
     }
 
     for (long i = 0; i < totalClientes; i++) {
         usleep(100000); // Espaça a criação de clientes
-        pthread_create(&clientes[i], NULL, cliente, (void*)i);// Cria as threads dos clientes
+        pthread_create(&clientes[i], NULL, cliente, (void*)i); // Cria as threads dos clientes
     }
 
     for (int i = 0; i < totalClientes; i++) {
