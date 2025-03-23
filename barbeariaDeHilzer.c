@@ -8,8 +8,9 @@
 *       1. Cliente entra na barbearia (Se a barbearia estiver cheia, o cliente vai embora)
 *       2. Cliente senta no sofá (Se o sofá estiver cheio, o cliente aguarda)
 *       3. Cliente senta em uma cadeira (Se todas as cadeiras estiverem ocupadas, o cliente senta no sofá)
-*       4. Cliente paga pelo corte (Cliente corta o cabelo e paga pelo corte)
-*       5. Cliente sai da barbearia
+*       4. Cliente corta o cabelo (Cliente corta o cabelo)
+*       5. Cliente paga pelo corte (Cliente corta o cabelo e paga pelo corte)
+*       6. Cliente sai da barbearia
 *
 *   Caminho do barbeiro:
 *       1. Barbeiro dorme (Se não houver clientes nas cadeiras e ainda houver clientes pendentes, o barbeiro dorme)
@@ -189,7 +190,7 @@ int main(int argc, char *argv[]) {
     }
 
     for (long i = 0; i < totalClientes; i++) {
-        usleep(100000); // Espaça a criação de clientes
+        usleep(100000); // Tempo para a criação de clientes
         pthread_create(&clientes[i], NULL, cliente, (void*)i); // Cria as threads dos clientes
     }
 
